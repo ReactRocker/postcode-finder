@@ -20,7 +20,7 @@ const request = async ({ method, url, data, headers, skipAuth }) => {
   try {
     const response = await promise;
     // const payload = response.data;
-    return response
+    return response;
     // if (headers) {
     //   return {
     //     data: payload,
@@ -30,6 +30,7 @@ const request = async ({ method, url, data, headers, skipAuth }) => {
 
     // return payload;
   } catch (e) {
+    console.error(e)
     const status = e?.response?.data?.status || "error";
     const message =
       e?.response?.data?.message ||

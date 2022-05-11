@@ -1,6 +1,6 @@
 import Cookies from "js-cookie";
 
-const TokenKey = "lorem50";
+const TokenKey = "postcode_finder";
 
 export function getToken() {
   return Cookies.get(TokenKey);

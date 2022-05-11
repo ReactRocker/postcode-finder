@@ -1,7 +1,7 @@
 import { PanoramaSharp } from "@mui/icons-material";
 import { createSlice } from "@reduxjs/toolkit";
 import createTableHeader from "../utils/createTableHeader";
-import { fetchData, fetchByMultipleCodes } from "./thunks/dataThunk";
+import { fetchData, fetchByMultipleCodes, loadAll } from "./thunks/dataThunk";
 
 const initialState = {
   params: {},
@@ -15,7 +15,6 @@ const initialState = {
   filters: {
     enable_filters: false,
     sold: { enabled: false, value: false },
-    // fa_src: { enabled: false, value: false },
     fa_src: {
       enabled: false,
       active: false,
@@ -29,8 +28,7 @@ const initialState = {
       active_keywords: [],
     },
     reduced: { enabled: false, value: false },
-    dataPick: { enabled: false, value: null },
-    // new_on_market: { enabled: false, value: false },
+    datePick: { enabled: false, value: null },
     category: {
       enabled: false,
       active: false,
@@ -101,27 +99,32 @@ export const dataSlice = createSlice({
       .addCase(fetchByMultipleCodes.rejected, (state, action) => {
         state.status = "error";
       })
-      .addCase(fetchData.pending, (state) => {
+      .addCase(loadAll.pending, (state, action) => {
         state.status = "loading";
       })
-      .addCase(fetchData.fulfilled, (state, { payload }) => {
+      .addCase(loadAll.fulfilled, (state, { payload }) => {
         state.status = "idle";
-        state.data = [...state.data, ...payload.data];
+        state.tabledData = {
+          headerData: createTableHeader(payload.data),
+          data: [...payload.data],
+        };
         state.meta = payload.meta;
         state.dataRdy = true;
-        state.params = payload.params;
       })
-      .addCase(fetchData.rejected, (state, action) => {
+      .addCase(loadAll.rejected, (state, action) => {
         state.status = "error";
       });
   },
 });
 
+export const selectFitersStatus = ({ data: { filters } }) =>
+  filters.enable_filters;
 export const selectData = ({ data: { tabledData } }) => tabledData;
 export const selectParams = ({ data }) => data.params;
 export const selectMeta = ({ data }) => data.meta;
 export const selectAll = ({ data }) => data;
 export const selectFilters = ({ data }) => data.filters;
+export const selectLoadingStatus = ({ data }) => data.status === "loading";
 
 export const selectFilteredData = ({
   data: {
@@ -138,31 +141,34 @@ export const selectFilteredData = ({
     category,
     matminder,
     enable_filters,
+    datePick,
   } = filters;
   return {
     dataRdy,
     headerData,
-    // data,
+
     data: !enable_filters
       ? data
       : data.filter((i) => {
-          // reduced.enabled ? i.reduced === reduced.value : null;
-          // new_on_market.enabled ? i.new_on_market === new_on_market.value : null;
-          //
-          console.log(
-            "fa src: ",
-            fa_src.enable && fa_src.active_keywords.map((i) => i.title)
-          );
-          console.log("fa src i: ", i.fa_src);
-
-          console.log(
-            "fa src includes: ",
-            fa_src.enable &&
-              fa_src.active_keywords.map((i) => i.title).includes(i.fa_src)
-          );
-
+          // console.log(
+          //   "date:",
+          //   new Date(i.created),
+          //   new Date(datePick.value),
+          //   new Date(i.created) >= new Date(datePick.value),
+          //   datePick.enabled
+          //     ? new Date(i.created) >= new Date(datePick.value)
+          //     : true
+          // );
           return (
             (sold.enabled ? i.sold === sold.value : true) &&
+            (datePick.enabled
+              ? new Date(i.created) >= new Date(datePick.value)
+              : true) &&
+            (reduced.enabled
+              ? reduced.value
+                ? i.reduced >= 40
+                : i.reduced <= 40
+              : true) &&
             (fa_src.enabled && fa_src.active_keywords.length > 0
               ? fa_src.active_keywords.map((i) => i.title).includes(i.fa_src)
               : true) &&

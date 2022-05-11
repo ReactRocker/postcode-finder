@@ -37,7 +37,7 @@ export default function CheckboxList() {
     fa_src,
     reduced,
     new_on_market,
-    dataPick,
+    datePick,
     category,
     matminder,
     enable_filters,
@@ -482,22 +482,42 @@ export default function CheckboxList() {
           />
         ) : null}
         <Divider />
-        <DatePicker
-          disabled={!enable_filters}
-          value={dataPick.value}
-          onChange={(value) => {
-            console.log(value);
-            dispatch(
-              setFilter({
-                filter: "dataPick",
-                value: {
-                  ...dataPick,
-                  value,
-                },
-              })
-            );
-          }}
+        <Divider />
+        <FormControlLabel
+          control={
+            <StyledSwitch
+              style={{ margin: "12px 8px" }}
+              disabled={!enable_filters}
+              active={datePick.enabled}
+              onChange={(e) => {
+                dispatch(
+                  enableFilter({
+                    filter: "datePick",
+                    value: !datePick.enabled,
+                  })
+                );
+              }}
+            />
+          }
+          label="Pick date"
         />
+        {datePick.enabled ? (
+          <DatePicker
+            disabled={!enable_filters}
+            value={datePick.value}
+            onChange={(value) => {
+              dispatch(
+                setFilter({
+                  filter: "datePick",
+                  value: {
+                    ...datePick,
+                    value: new Date(value),
+                  },
+                })
+              );
+            }}
+          />
+        ) : null}
         <Divider />
       </FormGroup>
     </Box>

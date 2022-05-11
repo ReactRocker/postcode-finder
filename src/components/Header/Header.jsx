@@ -17,6 +17,7 @@ import {
   TextField,
   Popover,
   InputAdornment,
+  CircularProgress,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
@@ -26,15 +27,26 @@ import MailIcon from "@mui/icons-material/Mail";
 import SearchIcon from "@mui/icons-material/Search";
 import SearchOutlinedIcon from "@mui/icons-material/SearchOutlined";
 import { useForm } from "react-hook-form";
-import { fetchData, fetchByMultipleCodes } from "../../redux/thunks/dataThunk";
-import { useDispatch } from "react-redux";
+import {
+  fetchByMultipleCodes,
+  loadAll,
+} from "../../redux/thunks/dataThunk";
+import { selectFitersStatus, selectLoadingStatus } from "../../redux/dataSlice";
+import { selectAuthorized, signOut } from "../../redux/authSlice";
+import { useDispatch, useSelector } from "react-redux";
 import Filters from "../Filters";
 import StyledSearch from "../StyledSearch";
+import AuthComp from "../AuthComp";
+import DownloadIcon from "@mui/icons-material/Download";
+import { removeToken } from "../../utils/tokenApi";
 
 const Search = () => {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const dispatch = useDispatch();
+  const enable_filters = useSelector(selectFitersStatus);
+  const loading = useSelector(selectLoadingStatus);
+  const authorized = useSelector(selectAuthorized);
 
   const handleOpenFilters = (event) => {
     setAnchorEl(event.currentTarget);
@@ -77,6 +89,7 @@ const Search = () => {
           error={errors?.search}
           {...register("search", {
             validate: {
+              isAuthorized: () => authorized || "Sign in first!",
               valid_postcode: (value) => {
                 const regex = /^[A-Z]{1,2}[0-9]{1,2} ?[0-9][A-Z]{2}$/i;
                 const values = value
@@ -92,13 +105,27 @@ const Search = () => {
           InputProps={{
             startAdornment: (
               <InputAdornment position="start">
-                <SearchOutlinedIcon sx={{ color: "white" }} />
+                {loading ? (
+                  <CircularProgress
+                    sx={{
+                      width: "20px !important",
+                      height: "20px !important",
+                      color: "#fefefe !important",
+                      ".MuiCircularProgress-root": {},
+                    }}
+                  />
+                ) : (
+                  <SearchOutlinedIcon sx={{ color: "white" }} />
+                )}
               </InputAdornment>
             ),
             endAdornment: (
               <InputAdornment position="start">
-                <IconButton sx={{ color: "white" }} onClick={handleOpenFilters}>
-                  <FilterAltIcon />
+                <IconButton
+                  sx={{ color: !enable_filters ? "white" : "#004ba0" }}
+                  onClick={handleOpenFilters}
+                >
+                  <FilterAltIcon sx={{ fontSize: "19px" }} />
                 </IconButton>
                 <Popover
                   open={open}
@@ -122,6 +149,18 @@ const Search = () => {
 
 const Header = () => {
   const [drawer, toggleDrawler] = React.useState(false);
+  const [authPopoverAnchor, setAuthPopover] = React.useState(null);
+  const authOpen = Boolean(authPopoverAnchor);
+  const authorized = useSelector(selectAuthorized);
+
+  const handleOpenAuth = (event) => {
+    setAuthPopover(event.currentTarget);
+  };
+
+  const handleCloseAuth = () => {
+    setAuthPopover(null);
+  };
+  const dispatch = useDispatch();
   const list = (
     <Box sx={{ width: 250 }} role="presentation">
       drawer inner
@@ -162,7 +201,14 @@ const Header = () => {
               <FilterAltIcon />
             </IconButton> */}
             <Search />
-
+            {/* <IconButton
+              sx={{ ml: 3 }}
+              onClick={() => {
+                dispatch(loadAll());
+              }}
+            >
+              <DownloadIcon sx={{ fontSize: "30px", color: "#fefefe" }} />
+            </IconButton> */}
             {/* <StyledSearch /> */}
             <IconButton
               size="large"
@@ -170,9 +216,50 @@ const Header = () => {
               color="inherit"
               aria-label="menu"
               sx={{ ml: " auto" }}
+              onClick={handleOpenAuth}
             >
               <AccountCircleIcon />
             </IconButton>
+            <Popover
+              open={authOpen}
+              // open={true}
+              anchorEl={authPopoverAnchor}
+              onClose={handleCloseAuth}
+              anchorOrigin={{
+                vertical: "bottom",
+                horizontal: "left",
+              }}
+            >
+              {authorized ? (
+                <Box
+                  sx={{
+                    p: 2,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                  }}
+                >
+                  <Typography variant="body1" sx={{ mb: 1, maxWidth: "200px" }}>
+                    Already signed in.
+                  </Typography>
+                  <Typography variant="body2" sx={{ mb: 1, maxWidth: "200px" }}>
+                    After about 1 day, the token expires and you need to
+                    re-authorize.
+                  </Typography>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      dispatch(signOut());
+                      removeToken();
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </Box>
+              ) : (
+                <AuthComp />
+              )}
+            </Popover>
           </Toolbar>
         </AppBar>
       </Box>

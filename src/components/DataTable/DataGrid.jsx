@@ -69,20 +69,20 @@ function TablePaginationActions(props) {
   };
 
   const handleLoadMore = (event) => {
-    // console.log("load more");
-    dispatch(
-      fetchData({
-        search: params.postcode,
-        offset: params.offset + 1,
-      })
-    );
+    console.log("meh")
+    // dispatch(
+    //   fetchData({
+    //     search: params.postcode,
+    //     offset: params.offset + 1,
+    //   })
+    // );
   };
 
   return (
     <Box sx={{ flexShrink: 0, ml: 2.5 }}>
       <IconButton
         onClick={handleFirstPageButtonClick}
-        disabled={page === 0}
+        disabled={true}
         aria-label="first page"
       >
         {theme.direction === "rtl" ? <LastPageIcon /> : <FirstPageIcon />}
@@ -234,7 +234,7 @@ function EnhancedTableHead(props) {
         {headerData.map((headCell) => (
           <TableCell
             key={headCell.id}
-            align={"left"}
+            align="left"
             padding={headCell.disablePadding ? "none" : "normal"}
             sortDirection={orderBy === headCell.id ? order : false}
           >
@@ -363,10 +363,6 @@ export default function DataTable() {
     setPage(0);
   };
 
-  // const handleChangeDense = (event) => {
-  //   setDense(event.target.checked);
-  // };
-
   const isSelected = (uid) => selected.indexOf(uid) !== -1;
 
   const emptyRows =
@@ -441,7 +437,6 @@ export default function DataTable() {
               {emptyRows > 0 && (
                 <TableRow
                   style={{
-                    // height: (dense ? 33 : 53) * emptyRows,
                     height: 53 * emptyRows,
                   }}
                 >
@@ -463,10 +458,6 @@ export default function DataTable() {
           limit={50}
         />
       </Paper>
-      {/* <FormControlLabel
-        control={<Switch checked={dense} onChange={handleChangeDense} />}
-        label="Dense padding"
-      /> */}
     </Box>
   ) : null;
 }
